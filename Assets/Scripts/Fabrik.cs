@@ -4,37 +4,20 @@ using UnityEngine;
 
 public class Fabrik : MonoBehaviour
 {
-    public List<Vector3> p;
-    public Vector3 t;
-    public float tol = 0;
+    public List<Vector3> jointPositions;
+    public Vector3 target;
+    public float tolerance = 0;
 
     private float[] d, r, lambda;
-
-    void Start()
-    {
-    }
 
     void Update()
     {
         FabrikAlgo();
     }
 
-    void OnGUI()
-    {
-        Vector3 point = new Vector3();
-        Event currentEvent = Event.current;
-        Vector2 mousePos = new Vector2();
-        Camera cam = Camera.main;
-        mousePos.x = currentEvent.mousePosition.x;
-        mousePos.y = cam.pixelHeight - currentEvent.mousePosition.y;
-        point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
-        t = point;
-        t.z = 0;
-    }
-
     void FabrikAlgo()
     {
-        int n = p.Count - 1;
+        int n = jointPositions.Count - 1;
 
         d = new float[n];
         r = new float[n];
@@ -43,11 +26,11 @@ public class Fabrik : MonoBehaviour
         // The distance between each join
 
         for (int i = 0; i < n; i++)
-            d[i] = (p[i + 1] - p[i]).magnitude;
+            d[i] = (jointPositions[i + 1] - jointPositions[i]).magnitude;
 
         // The distance between root and target
 
-        float dist = (p[0] - t).magnitude;
+        float dist = (jointPositions[0] - target).magnitude;
 
         // Check whether the target is within reach
 
@@ -61,82 +44,93 @@ public class Fabrik : MonoBehaviour
 
             for (int i = 0; i < n; i++)
             {
-                // Find the distance ri between the target t and the joint position pi
+                // Find the distance between the target and the joint position
 
-                r[i] = (t - p[i]).magnitude;
+                r[i] = (target - jointPositions[i]).magnitude;
                 lambda[i] = d[i] / r[i];
 
-                // Find the new joint positions pi
+                // Find the new joint positions
 
-                p[i + 1] = (1 - lambda[i]) * p[i] + lambda[i] * t;
+                jointPositions[i + 1] = (1 - lambda[i]) * jointPositions[i] + lambda[i] * target;
             }
         }
         else
         {
-            // The target is reachable; thus, set as b the initial position of the joint p1
+            // The target is reachable; thus, set the initial position of the first joint
 
-            Vector3 b = p[0];
+            Vector3 b = jointPositions[0];
 
-            // Check whether the distance between the end effector pn and the target t is greater than a tolerance
+            // Check whether the distance between the end effector and the target is greater than a tolerance
 
-            float difA = (p[n] - t).magnitude;
+            float difA = (jointPositions[n] - target).magnitude;
             int it = 0;
 
-            while (difA > tol && it < 5)
+            while (difA > tolerance && it < 5)
             {
                 it++;
-                
-                // STAGE 1: FORWARD REACHING
-                // Set the end effector pn as target t
 
-                p[n] = t;
+                // STAGE 1: FORWARD REACHING
+                // Set the end effector as target
+
+                jointPositions[n] = target;
 
                 for (int i = n - 1; i >= 0; i--)
                 {
-                    // Find the distance ri between the new joint position pi+1 and the joint pi
+                    // Find the distance between the new joint position and the previous joint
 
-                    r[i] = (p[i + 1] - p[i]).magnitude;
+                    r[i] = (jointPositions[i + 1] - jointPositions[i]).magnitude;
                     lambda[i] = d[i] / r[i];
 
-                    // Find the new joint positions pi
+                    // Find the new joint positions
 
-                    p[i] = (1 - lambda[i]) * p[i + 1] + lambda[i] * p[i];
+                    jointPositions[i] = (1 - lambda[i]) * jointPositions[i + 1] + lambda[i] * jointPositions[i];
                 }
 
                 // STAGE 2: BACKWARD REACHING
-                // Set the root p1 its initial position
+                // Set the root its initial position
 
-                p[0] = b;
+                jointPositions[0] = b;
 
                 for (int i = 0; i < n; i++)
                 {
-                    // Find the distance ri between the new joint position pi and the joint pi+1
+                    // Find the distance between the new joint position and the previous joint
 
-                    r[i] = (p[i + 1] - p[i]).magnitude;
+                    r[i] = (jointPositions[i + 1] - jointPositions[i]).magnitude;
                     lambda[i] = d[i] / r[i];
 
-                    // Find the new joint position pi
+                    // Find the new joint position
 
-                    p[i + 1] = (1 - lambda[i]) * p[i] + lambda[i] * p[i + 1];
+                    jointPositions[i + 1] = (1 - lambda[i]) * jointPositions[i] + lambda[i] * jointPositions[i + 1];
                 }
 
-                difA = (p[n] - t).magnitude;
+                difA = (jointPositions[n] - target).magnitude;
             }
         }
+    }
+
+    void OnGUI()
+    {
+        Vector3 point = new Vector3();
+        Event currentEvent = Event.current;
+        Vector2 mousePos = new Vector2();
+        Camera cam = Camera.main;
+        mousePos.x = currentEvent.mousePosition.x;
+        mousePos.y = cam.pixelHeight - currentEvent.mousePosition.y;
+        point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+        target = point;
+        target.z = 0;
     }
 
     void OnDrawGizmos()
     {
         Gizmos.color = Color.red;
-        for (int i = 0; i < p.Count - 1; i++)
+        for (int i = 0; i < jointPositions.Count - 1; i++)
         {
-            Gizmos.DrawLine(p[i], p[i + 1]);
+            Gizmos.DrawLine(jointPositions[i], jointPositions[i + 1]);
+            Gizmos.DrawSphere(jointPositions[i], 0.1f);
         }
-        for (int i = 0; i < p.Count; i++)
-        {
-            Gizmos.DrawSphere(p[i], 0.1f);
-        }
+        Gizmos.DrawSphere(jointPositions[jointPositions.Count - 1], 0.1f);
         Gizmos.color = Color.green;
-        Gizmos.DrawSphere(t, 0.1f);
+        Gizmos.DrawSphere(target, 0.1f);
     }
 }
