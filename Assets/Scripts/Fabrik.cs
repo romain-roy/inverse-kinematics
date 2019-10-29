@@ -134,9 +134,9 @@ public class Fabrik : MonoBehaviour
         }
         for (int i = 0; i < p.Count; i++)
         {
-            Gizmos.DrawSphere(p[i], 0.2f);
+            Gizmos.DrawSphere(p[i], 0.1f);
         }
         Gizmos.color = Color.green;
-        Gizmos.DrawSphere(t, 0.2f);
+        Gizmos.DrawSphere(t, 0.1f);
     }
 }
