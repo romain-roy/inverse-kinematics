@@ -6,13 +6,30 @@ public class Fabrik : MonoBehaviour
 {
     public List<Vector3> p;
     public Vector3 t;
-    // public float tol;
+    public float tol = 0;
 
     private float[] d, r, lambda;
 
     void Start()
     {
+    }
+
+    void Update()
+    {
         FabrikAlgo();
+    }
+
+    void OnGUI()
+    {
+        Vector3 point = new Vector3();
+        Event currentEvent = Event.current;
+        Vector2 mousePos = new Vector2();
+        Camera cam = Camera.main;
+        mousePos.x = currentEvent.mousePosition.x;
+        mousePos.y = cam.pixelHeight - currentEvent.mousePosition.y;
+        point = cam.ScreenToWorldPoint(new Vector3(mousePos.x, mousePos.y, cam.nearClipPlane));
+        t = point;
+        t.z = 0;
     }
 
     void FabrikAlgo()
@@ -62,9 +79,13 @@ public class Fabrik : MonoBehaviour
 
             // Check whether the distance between the end effector pn and the target t is greater than a tolerance
 
-            // float difA = (p[n] - t).magnitude;
-            for (int k = 0; k < 5; k++)
+            float difA = (p[n] - t).magnitude;
+            int it = 0;
+
+            while (difA > tol && it < 5)
             {
+                it++;
+                
                 // STAGE 1: FORWARD REACHING
                 // Set the end effector pn as target t
 
@@ -99,7 +120,7 @@ public class Fabrik : MonoBehaviour
                     p[i + 1] = (1 - lambda[i]) * p[i] + lambda[i] * p[i + 1];
                 }
 
-                // difA = (p[n] - t).magnitude;
+                difA = (p[n] - t).magnitude;
             }
         }
     }
@@ -113,8 +134,9 @@ public class Fabrik : MonoBehaviour
         }
         for (int i = 0; i < p.Count; i++)
         {
-            Gizmos.DrawSphere(p[i], 0.3f);
+            Gizmos.DrawSphere(p[i], 0.2f);
         }
-        Gizmos.DrawSphere(t, 0.3f);
+        Gizmos.color = Color.green;
+        Gizmos.DrawSphere(t, 0.2f);
     }
 }

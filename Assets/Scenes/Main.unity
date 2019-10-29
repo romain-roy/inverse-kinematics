@@ -211,11 +211,12 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   p:
-  - {x: 0, y: 3, z: 0}
-  - {x: -2, y: 1, z: 0}
-  - {x: -2, y: -2, z: 0}
-  - {x: 1, y: -4, z: 0}
-  t: {x: 5, y: -2, z: 0}
+  - {x: 0, y: 4, z: 0}
+  - {x: -2, y: 2, z: 0}
+  - {x: -2, y: -1, z: 0}
+  - {x: 1, y: -3, z: 0}
+  t: {x: 5, y: -1, z: 0}
+  tol: 0
 --- !u!4 &1297937465
 Transform:
   m_ObjectHideFlags: 0
@@ -278,7 +279,7 @@ Camera:
     y: 0
     width: 1
     height: 1
-  near clip plane: 0.3
+  near clip plane: 9
   far clip plane: 1000
   field of view: 60
   orthographic: 0
